@@ -1,0 +1,40 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pcw.backend.mapper.UserMapper">
+
+    <select id="getUserByEmail" resultType="pcw.backend.entity.User">
+        SELECT *
+        FROM user
+        WHERE email = #{email}
+    </select>
+
+    <select id="getUserByUsername" resultType="pcw.backend.entity.User">
+        SELECT *
+        FROM user
+        WHERE username = #{username}
+    </select>
+
+    <select id="getUserByUid" resultType="pcw.backend.entity.User">
+        SELECT *
+        FROM user
+        WHERE uid = #{uid}
+    </select>
+
+    <insert id="insertUser" parameterType="pcw.backend.entity.User" useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO user (username, email, password)
+        VALUES (#{username}, #{email}, #{password})
+    </insert>
+
+    <update id="updateUser" parameterType="pcw.backend.entity.User">
+        UPDATE user
+        SET username = #{username},
+            email    = #{email},
+            password = #{password}
+        WHERE uid = #{uid}
+    </update>
+
+    <delete id="deleteUserByUid" parameterType="Integer">
+        DELETE
+        FROM user
+        WHERE uid = #{uid}
+    </delete>
+</mapper>

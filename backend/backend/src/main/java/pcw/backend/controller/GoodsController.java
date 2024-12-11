@@ -1,0 +1,393 @@
+package pcw.backend.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.*;
+import org.openqa.selenium.NoSuchElementException;
+import org.springframework.beans.factory.annotation.Autowired;
+import pcw.backend.entity.GoodsHistoryPrice;
+import pcw.backend.entity.GoodsInfo;
+import pcw.backend.entity.HisPriceItem;
+import pcw.backend.service.GoodsInfoService;
+import pcw.backend.service.ServiceBt;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+
+import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.time.Duration;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/goods")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+public class GoodsController {
+
+    private final GoodsInfoService GoodsInfoService;
+
+    @Autowired
+    public GoodsController(GoodsInfoService GoodsInfoService) {
+        this.GoodsInfoService = GoodsInfoService;
+    }
+
+    // 用于存储每个用户和站点的 WebDriver
+    // private static ConcurrentHashMap<String, WebDriver> driverMap = new ConcurrentHashMap<>();
+
+    // 初始化 WebDriver
+    private WebDriver initializeDriver() {
+        ChromeOptions options = new ChromeOptions();
+        // 使用无头模式
+        options.addArguments("--headless");
+        options.addArguments("--remote-allow-origins=*");
+        // WebDriverManager.chromedriver().setup();
+        return new ChromeDriver(options);
+    }
+    @GetMapping("/history")
+    public ResponseEntity<?> getPriceHistory(@RequestParam("goodsId") Integer goodsId) {
+        try {
+            ServiceBt serviceBt = GoodsInfoService.getGoodsHistoryPrice(goodsId);
+            if (!serviceBt.isSuccess()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取历史价格失败: " + serviceBt.getData());
+            } else {
+                GoodsHistoryPrice history = (GoodsHistoryPrice) serviceBt.getData();
+                // 解析 JSON 格式的 priceHistory
+                ObjectMapper objectMapper = new ObjectMapper();
+                String json = history.getPriceHistory();
+                System.out.println("json: " + json);
+                Map<String, String> priceMap = objectMapper.readValue(json, new TypeReference<Map<String, String>>() {});
+                List<HisPriceItem> priceHistoryList = priceMap.entrySet().stream()
+                        .map(entry -> new HisPriceItem(entry.getKey(), entry.getValue()))
+                        .sorted(Comparator.comparing(HisPriceItem::getDate))
+                        .collect(Collectors.toList());
+                return ResponseEntity.ok(priceHistoryList);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取历史价格失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/database-search")
+    public ResponseEntity<?> searchGoodsInDatabase(@RequestParam(name = "keyword", defaultValue = "") String keyword) {
+        try {
+            List<GoodsInfo> products;
+            if (keyword.isEmpty()) {
+                ServiceBt serviceBt = GoodsInfoService.getAllGoods();
+                if (!serviceBt.isSuccess()) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("查询商品时发生异常: " + serviceBt.getData());
+                }
+                else {
+                    products = (List<GoodsInfo>) serviceBt.getData();
+                }
+            } else {
+                ServiceBt serviceBt = GoodsInfoService.getGoodsInfoByGoodsName(keyword);
+                if (!serviceBt.isSuccess()) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("查询商品时发生异常: " + serviceBt.getData());
+                }
+                else {
+                    products = (List<GoodsInfo>) serviceBt.getData();
+                    // 输出serviceBt.getData()
+                    // System.out.println("serviceBt.getData(): " + serviceBt.getData());
+                }
+            }
+            return ResponseEntity.ok(products);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("查询商品时发生异常: " + e.getMessage());
+        }
+    }
+
+    // 获取二维码图片并返回给前端
+//    @GetMapping("/login")
+//    public ResponseEntity<?> loginSite(@RequestParam("site") String site) {
+//        WebDriver driver = null;
+//        try {
+//            driver = initializeDriver();
+//            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+//
+//            String loginUrl = "";
+//            loginUrl = "https://www.smzdm.com/";
+//
+//            // 打开登录页面
+//            driver.get(loginUrl);
+//            // 在此暂停
+//            // Thread.sleep(2000);
+//
+//            WebElement loginLink = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("a.pt[onclick=\"loginShow('login')\"]")));
+//            loginLink.click();
+//            // 等待 iframe 出现并切换
+//            wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.cssSelector("iframe[src*='login.html']")));
+//
+//            WebElement qrCodeElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("img.loginWxAppCode")));
+//            // qrCodeBase64 = qrCodeElement.getScreenshotAs(OutputType.BASE64);
+//            // 等待 src 属性不为空
+//            wait.until(ExpectedConditions.attributeToBeNotEmpty(qrCodeElement, "src"));
+//            String qrCodeUrl = qrCodeElement.getAttribute("src");
+//            // 输出qrCodeUrl
+//            System.out.println("qrCodeUrl: " + qrCodeUrl);
+//
+//            // 生成唯一的 sessionId，用于标识当前登录会话
+//            String sessionId = UUID.randomUUID().toString();
+//
+//            // 将 driver 存储到 Map 中
+//            driverMap.put(sessionId, driver);
+//
+//            // 输出sessionId
+//            System.out.println("sessionId: " + sessionId);
+//            Map<String, String> responseBody = new HashMap<>();
+//            responseBody.put("url", qrCodeUrl);
+//            responseBody.put("sessionid", sessionId);
+//
+//            // 等待10秒
+//            // Thread.sleep(10000);
+//            // 将二维码和 sessionId 返回给前端
+//            return ResponseEntity.ok()
+//                    .body(responseBody);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            if (driver != null) {
+//                // 保存当前页面截图用于调试
+//                try {
+//                    File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+//                    FileUtils.copyFile(screenshot, new File("E:/PCW/screenshot.png"));
+//                } catch (Exception ex) {
+//                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取二维码失败：" + e.getMessage());
+//                } finally {
+//                    driver.quit();
+//                }
+//            }
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取二维码失败：" + e.getMessage());
+//        }
+//    }
+//
+//    // 检查登录状态
+//    @GetMapping("/checkLogin")
+//    public ResponseEntity<?> checkLoginStatus(@RequestParam("sessionId") String sessionId,
+//                                              @RequestParam("site") String site) {
+//        WebDriver driver = driverMap.get(sessionId);
+//        // 输出sessionId
+//        System.out.println("sessionId: " + sessionId);
+//        if (driver == null) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("无效的 sessionId");
+//        }
+//        try {
+//            boolean isLoggedIn = false;
+//            // WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+//            // wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("a.bbsuser[href='http://home.manmanbuy.com/usercenter.aspx']")));
+//            // isLoggedIn = driver.findElements(By.cssSelector("a.bbsuser[href='http://home.manmanbuy.com/usercenter.aspx']")).size() > 0;
+//
+//            // List<WebElement> accountElements = driver.findElements(By.xpath("//*[contains(text(), '我的帐户')]"));
+//            List<WebElement> loginElements = driver.findElements(By.xpath("//*[contains(text(), '请登录')]"));
+//            isLoggedIn = loginElements.size() > 0;
+//            // 保存当前页面截图到本地
+//            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+//            FileUtils.copyFile(screenshot, new File("E:/PCW/screenshot.png"));
+//
+//            // 输出size
+//            System.out.println("size: " + driver.findElements(By.cssSelector("a.bbsuser[href='http://home.manmanbuy.com/usercenter.aspx']")).size());
+//            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+//            WebElement inputElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("skey")));
+//            inputElement.clear();
+//            inputElement.sendKeys("111");
+//
+//            // 输出inputElement
+//            if (isLoggedIn) {
+//                // 登录成功
+//                // 获取登录后的 Cookie，可根据需求进行保存
+//                Set<Cookie> cookies = driver.manage().getCookies();
+//                // 关闭浏览器并移除 driver
+//                driver.quit();
+//                driverMap.remove(sessionId);
+//                return ResponseEntity.ok("登录成功");
+//            } else {
+//                // 未登录，继续等待
+//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("未登录");
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            driver.quit();
+//            driverMap.remove(sessionId);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("检查登录状态失败：" + e.getMessage());
+//        }
+//    }
+
+    // 搜索商品
+    @GetMapping("/search")
+    public ResponseEntity<?> runSelenium(
+            @RequestParam(name = "keyword", defaultValue = "iPad") String keyword,
+            @RequestParam(name = "site", defaultValue = "pdd") String site,
+            @RequestParam(name = "maxPage", defaultValue = "1") int maxPage) {
+
+//        WebDriver driver = driverMap.get(sessionId);
+//        if (driver == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("请先登录。");
+//        }
+        WebDriver driver = initializeDriver();
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        List<GoodsInfo> allProducts = new ArrayList<>();
+
+        try {
+            String searchUrl = "";
+            searchUrl = "https://search.smzdm.com/?s=" + quote(keyword) + "&p=1";
+            switch (site) {
+                case "pdd":
+                    searchUrl += "&mall_id=8645";
+                    break;
+                case "jd":
+                    searchUrl += "&mall_id=183";
+                    break;
+                case "tmall":
+                    searchUrl += "&mall_id=247";
+                    break;
+                default:
+                    break;
+            }
+
+            allProducts = indexPage(driver, wait, searchUrl, 1, maxPage, allProducts, site);
+
+            // 保存商品信息到数据库
+            for (GoodsInfo product : allProducts) {
+                ServiceBt serviceBt = GoodsInfoService.insertOrUpdateGoodsInfo(product);
+                System.out.println("insertOrUpdate Finished!");
+                if (!serviceBt.isSuccess()) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("保存商品信息失败: " + serviceBt.getData());
+                }
+            }
+            // 输出返回的东西
+            // System.out.println("allProducts: " + allProducts);
+            return ResponseEntity.ok(allProducts);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("运行 Selenium 过程中发生异常: " + e.getMessage());
+        } finally {
+            // 完成后关闭浏览器
+            driver.quit();
+            // driverMap.remove(sessionId);
+            System.out.println("ChromeDriver 已关闭");
+        }
+    }
+
+    // 翻页并抓取商品
+    private List<GoodsInfo> indexPage(WebDriver driver, WebDriverWait wait, String url, int currentPage, int maxPage, List<GoodsInfo> allProducts, String site) {
+        if (currentPage > maxPage) {
+            return allProducts;
+        }
+
+        try {
+            System.out.println("正在爬取第 " + currentPage + " 页: " + url);
+            driver.get(url);
+
+            List<GoodsInfo> products = getProducts(driver);
+            allProducts.addAll(products);
+
+            if (currentPage < maxPage) {
+                WebElement nextPageBtn = wait.until(ExpectedConditions.elementToBeClickable(By.linkText("下一页")));
+                nextPageBtn.click();
+                // 等待页面加载完成
+                Thread.sleep(2000);
+                String newUrl = driver.getCurrentUrl();
+                return indexPage(driver, wait, newUrl, currentPage + 1, maxPage, allProducts, site);
+            }
+        } catch (TimeoutException e) {
+            System.out.println("第 " + currentPage + " 页抓取时超时: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("第 " + currentPage + " 页抓取时发生异常: " + e.getMessage());
+        }
+
+        return allProducts;
+    }
+
+    // 获取商品信息
+    private List<GoodsInfo> getProducts(WebDriver driver) {
+        List<GoodsInfo> products = new ArrayList<>();
+        try {
+            List<WebElement> itemElements = null;
+            itemElements = driver.findElements(By.cssSelector("li.feed-row-wide"));
+            if (itemElements != null) {
+                for (WebElement item : itemElements) {
+                    try {
+                        GoodsInfo product = new GoodsInfo();
+                        // 提取商品名称
+                        WebElement mmTitleElement = item.findElement(By.cssSelector("h5.feed-block-title > a.feed-nowrap"));
+                        String mmGoodsName = mmTitleElement.getText();
+                        product.setGoodsName(mmGoodsName);
+
+                        // 提取规格（如果有）
+//                        String mmGoodsSpec = "";
+//                        try {
+//                            // 假设规格在某个span内，需根据实际情况调整
+//                            WebElement mmSpecElement = item.findElement(By.cssSelector("div.cost span"));
+//                            mmGoodsSpec = mmSpecElement.getText();
+//                        } catch (NoSuchElementException e) {
+//                            mmGoodsSpec = "暂无规格";
+//                        }
+//                        product.setGoodsSpec(mmGoodsSpec);
+                        product.setGoodsSpec("暂无规格");
+
+                        // 提取价格
+                        WebElement mmPriceElement = item.findElement(By.cssSelector("h5.feed-block-title > a > div.z-highlight"));
+                        String mmGoodsPrice = mmPriceElement.getText();
+                        product.setGoodsPrice(mmGoodsPrice);
+
+                        // 提取图片 URL
+                        WebElement mmImgElement = item.findElement(By.cssSelector("div.z-feed-img > a > img"));
+                        String mmGoodsImgUrl = mmImgElement.getAttribute("src");
+                        if (mmGoodsImgUrl.startsWith("//")) {
+                            mmGoodsImgUrl = "https:" + mmGoodsImgUrl;
+                        }
+                        product.setGoodsImgUrl(mmGoodsImgUrl);
+
+                        // 提取商品链接
+                        WebElement linkElement = item.findElement(By.cssSelector("div.z-feed-img > a"));
+                        String goodsUrl = linkElement.getAttribute("href");
+                        product.setGoodsUrl(goodsUrl);
+                        products.add(product);
+                        // 输出所有提取到的信息：
+                        // System.out.println(product);
+                    } catch (NoSuchElementException e) {
+                        System.out.println("解析商品信息时出错: " + e.getMessage());
+                    }
+                }
+            }
+
+            System.out.println("已抓取 " + products.size() + " 个商品");
+        } catch (Exception e) {
+            System.out.println("获取商品信息时发生异常: " + e.getMessage());
+        }
+        return products;
+    }
+
+    // 解析价格字符串为 Double（保留为字符串以保留精度和格式）
+    private String parsePrice(String priceStr) {
+        try {
+            // 去除非数字字符，如人民币符号
+            String cleanPrice = priceStr.replaceAll("[^0-9.]", "");
+            return cleanPrice;
+        } catch (Exception e) {
+            System.out.println("解析价格失败: " + priceStr);
+            return "0.00";
+        }
+    }
+
+    // URL编码
+    private String quote(String keyword) {
+        try {
+            return URLEncoder.encode(keyword, StandardCharsets.UTF_8.toString());
+        } catch (Exception e) {
+            return keyword;
+        }
+    }
+}
