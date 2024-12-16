@@ -2,7 +2,10 @@ CREATE USER 'usr'@'%' IDENTIFIED BY '123456';
 GRANT ALL PRIVILEGES ON *.* TO 'usr'@'%' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 
-create database if not exists pcw;
+# create database if not exists pcw;
+CREATE DATABASE IF NOT EXISTS pcw
+    CHARACTER SET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;
 
 use pcw;
 
@@ -15,7 +18,10 @@ CREATE TABLE SPRING_SESSION (
     EXPIRY_TIME BIGINT NOT NULL,
     PRINCIPAL_NAME VARCHAR(100),
     CONSTRAINT SPRING_SESSION_PK PRIMARY KEY (PRIMARY_ID)
-) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB
+  ROW_FORMAT=DYNAMIC
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
 
 CREATE UNIQUE INDEX SPRING_SESSION_IX1 ON SPRING_SESSION (SESSION_ID);
 CREATE INDEX SPRING_SESSION_IX2 ON SPRING_SESSION (EXPIRY_TIME);
@@ -27,7 +33,10 @@ CREATE TABLE SPRING_SESSION_ATTRIBUTES (
    ATTRIBUTE_BYTES BLOB NOT NULL,
    CONSTRAINT SPRING_SESSION_ATTRIBUTES_PK PRIMARY KEY (SESSION_PRIMARY_ID, ATTRIBUTE_NAME),
    CONSTRAINT SPRING_SESSION_ATTRIBUTES_FK FOREIGN KEY (SESSION_PRIMARY_ID) REFERENCES SPRING_SESSION(PRIMARY_ID) ON DELETE CASCADE
-) ENGINE=InnoDB ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB
+  ROW_FORMAT=DYNAMIC
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
 
 create table if not exists user
 (
@@ -42,36 +51,11 @@ create table if not exists user
         unique (email),
     CONSTRAINT chk_username_length CHECK (CHAR_LENGTH(username) >= 6),
     CONSTRAINT chk_email_length CHECK (CHAR_LENGTH(email) >= 6)
-) engine=innodb comment '用户表';
+) engine=innodb
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  comment '用户表';
 
-# create table if not exists goods_category
-# (
-#     category_id int unsigned auto_increment not null primary key comment '分类id',
-#     category_name varchar(255) not null comment '分类名称',
-#     parent_id int unsigned default 0 not null comment '父分类id',
-#     category_level int unsigned default 1 not null comment '分类级别',
-#     modified_time timestamp default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '修改时间'
-# ) engine=innodb comment '商品分类表';
-
-# create table if not exists goods_info
-# (
-#     goods_id int unsigned auto_increment not null primary key comment '商品id',
-#     goods_name varchar(255) not null comment '商品名称',
-#     goods_tsc varchar(255) comment '商品编码',
-#     bar_code varchar(255) not null comment '商品条码',
-#     goods_desc varchar(255) not null comment '商品描述',
-#     one_category_id int unsigned not null comment '一级分类id',
-#     two_category_id int unsigned not null comment '二级分类id',
-#     three_category_id int unsigned not null comment '三级分类id',
-#     goods_img varchar(255) not null comment '商品主图片',
-#     goods_price decimal(10, 2) not null comment '商品价格',
-#     goods_stock int unsigned not null comment '商品库存',
-#     weight float comment '商品重量',
-#     length float comment '商品长度',
-#     height float comment '商品高度',
-#     width float comment '商品宽度',
-#     modified_time timestamp default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '修改时间'
-# ) engine=innodb comment '商品信息表';
 CREATE TABLE IF NOT EXISTS goods_info
 (
     goods_id INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY COMMENT '商品id',
@@ -80,17 +64,17 @@ CREATE TABLE IF NOT EXISTS goods_info
     goods_price VARCHAR(255) COMMENT '价格',
     goods_img_url VARCHAR(255) NOT NULL COMMENT '图片URL',
     goods_url VARCHAR(255) NOT NULL COMMENT '商品链接'
-) ENGINE=InnoDB COMMENT='商品信息表';
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='商品信息表';
 
-# create table if not exists goods_history_price
-# (
-#     good_id int unsigned not null primary key comment '商品id',
-#     price_history json not null comment '历史价格',
-#     constraint fk_goods_id foreign key (good_id) references goods_info (goods_id)
-# ) engine=innodb comment '商品历史价格表';
 CREATE TABLE IF NOT EXISTS goods_history_price (
    good_id INT UNSIGNED NOT NULL,
    price_history JSON NOT NULL,
    PRIMARY KEY (good_id),
    CONSTRAINT fk_goods_id FOREIGN KEY (good_id) REFERENCES goods_info(goods_id) ON DELETE CASCADE
-) ENGINE=InnoDB COMMENT='商品历史价格表';
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci
+  COMMENT='商品历史价格表';

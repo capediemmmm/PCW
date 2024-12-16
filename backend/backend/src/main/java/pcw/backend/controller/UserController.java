@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/user")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5173", "http://10.192.48.150:5173/"}, allowCredentials = "true")
 public class UserController {
     @Data
     public static class LoginRequest {
@@ -80,6 +80,8 @@ public class UserController {
         ServiceBt result = userService.validate(loginRequest.getUsername(), loginRequest.getPassword());
         if (result.isSuccess()) {
             session.setAttribute("uid", result.getData());
+            // 输出uid
+            System.out.println("uid: " + result.getData());
             return ResponseEntity.ok("success");
         } else {
             return ResponseEntity.ok("fail");

@@ -6,21 +6,25 @@ import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.*;
 import org.openqa.selenium.NoSuchElementException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import pcw.backend.entity.GoodsHistoryPrice;
 import pcw.backend.entity.GoodsInfo;
 import pcw.backend.entity.HisPriceItem;
 import pcw.backend.service.GoodsInfoService;
 import pcw.backend.service.ServiceBt;
+import pcw.backend.config.SeleniumProperties;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.io.File;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -30,14 +34,20 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/goods")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+// http://10.192.48.150:5173/ and http://localhost:5173
+
+@CrossOrigin(origins = {"http://localhost:5173", "http://10.192.48.150:5173/"}, allowCredentials = "true")
 public class GoodsController {
 
     private final GoodsInfoService GoodsInfoService;
+    private final SeleniumProperties seleniumProperties;
+    private final Environment environment;
 
     @Autowired
-    public GoodsController(GoodsInfoService GoodsInfoService) {
+    public GoodsController(GoodsInfoService GoodsInfoService, SeleniumProperties seleniumProperties, Environment environment) {
         this.GoodsInfoService = GoodsInfoService;
+        this.seleniumProperties = seleniumProperties;
+        this.environment = environment;
     }
 
     // 用于存储每个用户和站点的 WebDriver
@@ -49,8 +59,24 @@ public class GoodsController {
         // 使用无头模式
         options.addArguments("--headless");
         options.addArguments("--remote-allow-origins=*");
+        options.addArguments("--disable-dev-shm-usage");
         // WebDriverManager.chromedriver().setup();
-        return new ChromeDriver(options);
+//        if (Arrays.asList(environment.getActiveProfiles()).contains("docker")) {
+//            options.setBinary("/usr/bin/chromium");
+//        }
+//        return new ChromeDriver(options);
+        if (Arrays.asList(environment.getActiveProfiles()).contains("docker")) {
+            // 使用 RemoteWebDriver 连接到 Selenium 容器
+            try {
+                String seleniumUrl = String.format("http://%s:%d/wd/hub", seleniumProperties.getHost(), seleniumProperties.getPort());
+                return new RemoteWebDriver(new URL(seleniumUrl), options);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to initialize WebDriver", e);
+            }
+        } else {
+            // 使用本地的 ChromeDriver
+            return new ChromeDriver(options);
+        }
     }
     @GetMapping("/history")
     public ResponseEntity<?> getPriceHistory(@RequestParam("goodsId") Integer goodsId) {
@@ -107,122 +133,6 @@ public class GoodsController {
         }
     }
 
-    // 获取二维码图片并返回给前端
-//    @GetMapping("/login")
-//    public ResponseEntity<?> loginSite(@RequestParam("site") String site) {
-//        WebDriver driver = null;
-//        try {
-//            driver = initializeDriver();
-//            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-//
-//            String loginUrl = "";
-//            loginUrl = "https://www.smzdm.com/";
-//
-//            // 打开登录页面
-//            driver.get(loginUrl);
-//            // 在此暂停
-//            // Thread.sleep(2000);
-//
-//            WebElement loginLink = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("a.pt[onclick=\"loginShow('login')\"]")));
-//            loginLink.click();
-//            // 等待 iframe 出现并切换
-//            wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.cssSelector("iframe[src*='login.html']")));
-//
-//            WebElement qrCodeElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("img.loginWxAppCode")));
-//            // qrCodeBase64 = qrCodeElement.getScreenshotAs(OutputType.BASE64);
-//            // 等待 src 属性不为空
-//            wait.until(ExpectedConditions.attributeToBeNotEmpty(qrCodeElement, "src"));
-//            String qrCodeUrl = qrCodeElement.getAttribute("src");
-//            // 输出qrCodeUrl
-//            System.out.println("qrCodeUrl: " + qrCodeUrl);
-//
-//            // 生成唯一的 sessionId，用于标识当前登录会话
-//            String sessionId = UUID.randomUUID().toString();
-//
-//            // 将 driver 存储到 Map 中
-//            driverMap.put(sessionId, driver);
-//
-//            // 输出sessionId
-//            System.out.println("sessionId: " + sessionId);
-//            Map<String, String> responseBody = new HashMap<>();
-//            responseBody.put("url", qrCodeUrl);
-//            responseBody.put("sessionid", sessionId);
-//
-//            // 等待10秒
-//            // Thread.sleep(10000);
-//            // 将二维码和 sessionId 返回给前端
-//            return ResponseEntity.ok()
-//                    .body(responseBody);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            if (driver != null) {
-//                // 保存当前页面截图用于调试
-//                try {
-//                    File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-//                    FileUtils.copyFile(screenshot, new File("E:/PCW/screenshot.png"));
-//                } catch (Exception ex) {
-//                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取二维码失败：" + e.getMessage());
-//                } finally {
-//                    driver.quit();
-//                }
-//            }
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取二维码失败：" + e.getMessage());
-//        }
-//    }
-//
-//    // 检查登录状态
-//    @GetMapping("/checkLogin")
-//    public ResponseEntity<?> checkLoginStatus(@RequestParam("sessionId") String sessionId,
-//                                              @RequestParam("site") String site) {
-//        WebDriver driver = driverMap.get(sessionId);
-//        // 输出sessionId
-//        System.out.println("sessionId: " + sessionId);
-//        if (driver == null) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("无效的 sessionId");
-//        }
-//        try {
-//            boolean isLoggedIn = false;
-//            // WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-//            // wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("a.bbsuser[href='http://home.manmanbuy.com/usercenter.aspx']")));
-//            // isLoggedIn = driver.findElements(By.cssSelector("a.bbsuser[href='http://home.manmanbuy.com/usercenter.aspx']")).size() > 0;
-//
-//            // List<WebElement> accountElements = driver.findElements(By.xpath("//*[contains(text(), '我的帐户')]"));
-//            List<WebElement> loginElements = driver.findElements(By.xpath("//*[contains(text(), '请登录')]"));
-//            isLoggedIn = loginElements.size() > 0;
-//            // 保存当前页面截图到本地
-//            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-//            FileUtils.copyFile(screenshot, new File("E:/PCW/screenshot.png"));
-//
-//            // 输出size
-//            System.out.println("size: " + driver.findElements(By.cssSelector("a.bbsuser[href='http://home.manmanbuy.com/usercenter.aspx']")).size());
-//            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-//            WebElement inputElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("skey")));
-//            inputElement.clear();
-//            inputElement.sendKeys("111");
-//
-//            // 输出inputElement
-//            if (isLoggedIn) {
-//                // 登录成功
-//                // 获取登录后的 Cookie，可根据需求进行保存
-//                Set<Cookie> cookies = driver.manage().getCookies();
-//                // 关闭浏览器并移除 driver
-//                driver.quit();
-//                driverMap.remove(sessionId);
-//                return ResponseEntity.ok("登录成功");
-//            } else {
-//                // 未登录，继续等待
-//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("未登录");
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            driver.quit();
-//            driverMap.remove(sessionId);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("检查登录状态失败：" + e.getMessage());
-//        }
-//    }
-
     // 搜索商品
     @GetMapping("/search")
     public ResponseEntity<?> runSelenium(
@@ -258,6 +168,21 @@ public class GoodsController {
 
             allProducts = indexPage(driver, wait, searchUrl, 1, maxPage, allProducts, site);
 
+            // 将url为https://www.smzdm.com/p/135650958/的商品（如果被查到了）的价格（类型是"3499元"这样的）转换为数字，然后修改为原值的0.9倍再转换为字符串（记得带上元）存入数据库
+            for (GoodsInfo product : allProducts) {
+                if (product.getGoodsUrl().equals("https://www.smzdm.com/p/135650958/")) {
+                    System.out.println("将要降价: " + product);
+                    String priceStr = product.getGoodsPrice();
+                    String price = parsePrice(priceStr);
+                    double priceDouble = Double.parseDouble(price);
+                    priceDouble *= 0.55;
+                    String newPrice = String.format("%.2f", priceDouble) + "元";
+                    product.setGoodsPrice(newPrice);
+                }
+            }
+
+            System.out.println("allProducts: " + allProducts);
+
             // 保存商品信息到数据库
             for (GoodsInfo product : allProducts) {
                 ServiceBt serviceBt = GoodsInfoService.insertOrUpdateGoodsInfo(product);
@@ -267,7 +192,7 @@ public class GoodsController {
                 }
             }
             // 输出返回的东西
-            // System.out.println("allProducts: " + allProducts);
+//            System.out.println("allProducts: " + allProducts);
             return ResponseEntity.ok(allProducts);
         } catch (Exception e) {
             e.printStackTrace();

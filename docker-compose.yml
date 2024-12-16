@@ -1,0 +1,66 @@
+services:
+  app:
+    build: ./backend/backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/pcw?useSSL=false
+      - SPRING_DATASOURCE_USERNAME=usr
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - SELENIUM_HOST=selenium
+      - SELENIUM_PORT=4444
+      - SE_ENABLE_TRACING=false
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      selenium:
+        condition: service_started
+      db:
+        condition: service_healthy
+#      otel-collector:
+#        condition: service_healthy
+    shm_size: 2g
+
+  db:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    ports:
+      - "4999:3306"
+    volumes:
+      - ./backend/backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  selenium:
+    image: selenium/standalone-chrome:latest
+    environment:
+      - SE_ENABLE_TRACING=false
+    ports:
+      - "4444:4444"
+    shm_size: 2g
+#    environment:
+#      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+#
+#  otel-collector:
+#    image: otel/opentelemetry-collector:latest
+#    ports:
+#      - "4317:4317"
+#      - "4318:4318"  # 添加 HTTP OTLP 端口
+#      - "8888:8888"  # 添加 Metrics 端口
+#    volumes:
+#      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
+#    command: ["--config=/etc/otelcol/config.yaml"]
+#    healthcheck:
+##      test: [ "CMD-SHELL", "curl -f http://localhost:4317 || exit 1" ]
+#      test: [ "CMD-SHELL", "curl -f http://localhost:8888/metrics || exit 1" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+
+volumes:
+  db-data:

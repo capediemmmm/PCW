@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import reactLogo from '../../assets/react.svg'
 import './home.css'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Button, Card, App, Form, Input, Checkbox, Spin } from 'antd';
 import { NamePath } from 'antd/es/form/interface';
-import { UserOutlined, LockOutlined, LoadingOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import axios from 'axios'
 
 interface RegisterProps {
@@ -26,7 +26,7 @@ interface FormValues {
 }
 
 function Register({ setState, setLoading }: RegisterProps) {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const [form] = Form.useForm<FormValues>();
     const { message } = App.useApp();
 
@@ -37,6 +37,7 @@ function Register({ setState, setLoading }: RegisterProps) {
             const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/user/register`, values, {
                 withCredentials: true,
             });
+            console.log("register response: ", response.data)
             if (response.data === 'success') {
                 message.success('Register successfully!');
                 setState(false);
@@ -161,7 +162,7 @@ function Register({ setState, setLoading }: RegisterProps) {
                 <Button type="primary" htmlType="submit" className="register-form-button">
                     Register
                 </Button>
-                Or <Link onClick={() => setState(false)}>login now!</Link>
+                Or <Button onClick={() => setState(false)}>login now!</Button>
             </Form.Item>
         </Form>
     );
@@ -227,31 +228,6 @@ function Login({ setState, setLoading }: LoginProps) {
                 />
             </Form.Item>
             <Form.Item>
-                {/*<Link*/}
-                {/*    className="login-form-forgot"*/}
-                {/*    onClick={() => {*/}
-                {/*        App.useApp().modal.info({*/}
-                {/*            title: 'Forgot password',*/}
-                {/*            content: (*/}
-                {/*                <div>*/}
-                {/*                    <p>Please contact the administrator to reset your password.</p>*/}
-                {/*                    <p>*/}
-                {/*                        <a href="mailto:" target="_blank" rel="noopener noreferrer">*/}
-                {/*                            Email*/}
-                {/*                        </a>*/}
-                {/*                    </p>*/}
-                {/*                </div>*/}
-                {/*            ),*/}
-                {/*            onOk() {},*/}
-                {/*        });*/}
-                {/*    }}*/}
-                {/*>*/}
-                {/*    Forgot password*/}
-                {/*</Link>*/}
-                {/*<a className="login-form-forgot" href="">*/}
-                {/*    Forgot password*/}
-                {/*</a>*/}
-
                 <Form.Item name="remember" valuePropName="checked" noStyle>
                     <Checkbox>Remember me</Checkbox>
                 </Form.Item>
@@ -261,7 +237,7 @@ function Login({ setState, setLoading }: LoginProps) {
                 <Button type="primary" htmlType="submit" className="login-form-button">
                     Log in
                 </Button>
-                Or <Link onClick={() => setState(true)}>register now!</Link>
+                Or <Button onClick={() => setState(true)}>register now!</Button>
             </Form.Item>
         </Form>
     );
@@ -294,6 +270,7 @@ function Home() {
             await axios.get(`${import.meta.env.VITE_API_URL}/api/user/info`, {
                 withCredentials: true,
             });
+            console.log("info user success");
             navigate('/index');
         } catch (error) {
             console.log(error);

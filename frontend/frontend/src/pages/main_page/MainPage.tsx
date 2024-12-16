@@ -1,12 +1,10 @@
 import React, {useState, useEffect, useRef} from 'react';
 import "./mainpage.css";
-import { PoweroffOutlined, LineChartOutlined, ClockCircleOutlined, CloseOutlined  } from '@ant-design/icons';
+import { ShoppingOutlined, PoweroffOutlined, LineChartOutlined, ClockCircleOutlined, CloseOutlined  } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Breadcrumb, Layout, Menu, theme, Input, Modal, Card, Row, Col, Pagination, Spin } from 'antd';
+import { Layout, Menu, theme, Input, Modal, Card, Row, Col, Pagination, Spin } from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import reactLogo from "../../assets/react.svg";
-import taobaoLogo from '../../assets/taobao.svg';
 import jdLogo from '../../assets/jingdong.svg';
 import tmallLogo from '../../assets/tmall.svg';
 import pddLogo from '../../assets/pdd.svg';   // 拼多多
@@ -63,15 +61,8 @@ const MainPage: React.FC = () => {
     const [historyLoading, setHistoryLoading] = useState<boolean>(false); // 历史价格加载状态
     const [priceWatchList, setPriceWatchList] = useState<Set<string>>(new Set()); // 降价提醒列表
     const previousPrices = useRef<{ [key: string]: number }>({}); // 记录之前的价格
-    // const [loginStatus, setLoginStatus] = useState<{ [key: string]: boolean }>({
-    //     taobao: false,
-    //     jd: false,
-    //     tmall: false,
-    // }); // 登录状态
-    // const [qrCode, setQrCode] = useState<string>(''); // 二维码图片url
-    // const [sessionId, setSessionId] = useState<string>(''); // 后端会话ID
+    const [collapsed, setCollapsed] = useState(false);
     const maxPage = 1;
-    // const [isModalVisible, setIsModalVisible] = useState<boolean>(false); // 控制 Modal 显示
 
     const {
         token: { colorBgContainer, borderRadiusLG },
@@ -91,62 +82,12 @@ const MainPage: React.FC = () => {
     const onSearch = async (value: string) => {
         console.log('Search:', value);
         setSearchKeyword(value);
-        // if (!loginStatus[selectedSite]) {
-        //     // 未登录状态，弹出登录二维码
-        //     await loginSite(selectedSite);
-        // }
     };
 
     const onDatabaseSearch = async (value: string) => {
         console.log('Database Search:', value);
         setSearchKeyword(value);
     }
-
-    // const loginSite = async (site: string) => {
-    //     try {
-    //         // 请求后端获取二维码
-    //         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/goods/login`, {
-    //             params: {
-    //                 site,
-    //             },
-    //             withCredentials: true,
-    //         });
-    //
-    //         const { sessionid, url } = response.data;
-    //         setSessionId(sessionid);
-    //         console.log('sessionId:', sessionid);
-    //
-    //         setQrCode(url);
-    //         setIsModalVisible(true);
-    //
-    //     } catch (error) {
-    //         console.error('获取二维码失败:', error);
-    //         Modal.error({
-    //             title: '获取二维码失败',
-    //             content: '请稍后重试。',
-    //         });
-    //     }
-    // };
-
-    // const checkLoginStatus = async (sessionId: string, site: string) => {
-    //     try {
-    //         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/goods/checkLogin`, {
-    //             params: {
-    //                 sessionId,
-    //                 site,
-    //             },
-    //             withCredentials: true,
-    //         });
-    //         if (response.data === '登录成功') {
-    //             return true;
-    //         } else {
-    //             return false;
-    //         }
-    //     } catch (error) {
-    //         console.error('检查登录状态失败:', error);
-    //         return false;
-    //     }
-    // };
 
     const handleSiteChange = (e: any) => {
         setSelectedSite(e.key);
@@ -159,73 +100,24 @@ const MainPage: React.FC = () => {
             okText: '是',
             cancelText: '否',
             onOk() {
+                // 向后端api/user/logout接口发送请求
+                try {
+                    const response = axios.get(`${import.meta.env.VITE_API_URL}/api/user/logout`, {
+                        withCredentials: true,
+                    });
+                    console.log('退出登录成功:', response);
+                } catch (error: any) {
+                    console.error('退出登录失败:', error);
+                    // 输出失败给用户
+                    Modal.error({
+                        title: '退出登录失败',
+                        content: '请稍后重试。',
+                    });
+                }
                 navigate('/'); // 返回首页
             },
         });
     };
-
-    // useEffect(() => {
-    //     if (isModalVisible && sessionId) {
-    //         let isMounted = true;
-    //         let attempts = 0;
-    //         const maxAttempts = 10; // 最大尝试次数
-    //         const interval = setInterval(async () => {
-    //             if (!isMounted) {
-    //                 clearInterval(interval);
-    //                 return;
-    //             }
-    //             attempts += 1;
-    //             console.log(`Polling attempt ${attempts}`);
-    //             const loginResult = await checkLoginStatus(sessionId, selectedSite);
-    //             if (loginResult) {
-    //                 if (isMounted) {
-    //                     const updatedStatus = { ...loginStatus, [selectedSite]: true };
-    //                     setLoginStatus(updatedStatus);
-    //                     setIsModalVisible(false);
-    //                     fetchProducts(searchKeyword, selectedSite);
-    //                     Modal.success({
-    //                         title: '登录成功',
-    //                         content: '您已成功登录。',
-    //                     });
-    //                 }
-    //                 clearInterval(interval);
-    //             } else if (attempts >= maxAttempts) {
-    //                 if (isMounted) {
-    //                     setIsModalVisible(false);
-    //                     Modal.error({
-    //                         title: '登录超时',
-    //                         content: '登录未能完成，请重试。',
-    //                     });
-    //                 }
-    //                 clearInterval(interval);
-    //             }
-    //         }, 3000); // 每3秒轮询一次
-    //
-    //         return () => {
-    //             isMounted = false;
-    //             clearInterval(interval);
-    //         };
-    //     }
-    // }, [isModalVisible, sessionId, selectedSite, searchKeyword, loginStatus]);
-    //
-    // const handleCheckLoginStatus = async () => {
-    //     const loginResult = await checkLoginStatus(sessionId, selectedSite);
-    //     if (loginResult) {
-    //         const updatedStatus = { ...loginStatus, [selectedSite]: true };
-    //         setLoginStatus(updatedStatus);
-    //         setIsModalVisible(false);
-    //         fetchProducts(searchKeyword, selectedSite);
-    //         Modal.success({
-    //             title: '登录成功',
-    //             content: '您已成功登录。',
-    //         });
-    //     } else {
-    //         Modal.error({
-    //             title: '登录失败',
-    //             content: '请重试。',
-    //         });
-    //     }
-    // };
 
     useEffect(() => {
         if (searchKeyword) {
@@ -247,7 +139,12 @@ const MainPage: React.FC = () => {
                 },
                 withCredentials: true,
             });
-            setDbProductList(response.data);
+            let products = response.data;
+            products = products.map((product: any) => ({
+                ...product,
+                goodsPriceNum: parsePrice(product.goodsPrice),
+            }));
+            setDbProductList(products);
             console.log('数据库搜索成功');
             console.log(dbproductList);
             console.log(currentDbProducts);
@@ -261,6 +158,11 @@ const MainPage: React.FC = () => {
         }
     };
 
+    const parsePrice = (priceStr: string): number => {
+        const num = parseFloat(priceStr.replace(/[^0-9.]/g, ''));
+        return isNaN(num) ? 0 : num;
+    };
+
     const fetchProducts = async (keyword: string, site: string) => {
         setLoading(true);
         try {
@@ -272,9 +174,15 @@ const MainPage: React.FC = () => {
                 },
                 withCredentials: true,
             });
-            setProductList(response.data); // 假设后端返回的数据格式为 { products: [...] }
+            let products = response.data;
+            products = products.map((product: any) => ({
+                ...product,
+                goodsPriceNum: parsePrice(product.goodsPrice),
+            }));
+
+            setProductList(products); // 假设后端返回的数据格式为 { products: [...] }
             console.log('搜索成功');
-            checkPriceDrops(response.data); // 调用检查降价
+            checkPriceDrops(products); // 调用检查降价
         } catch (error: any) {
             console.error('搜索失败:', error);
             console.error('搜索失败，请稍后重试');
@@ -288,9 +196,11 @@ const MainPage: React.FC = () => {
     // 检查降价并发送邮件
     const checkPriceDrops = async (products: any[]) => {
         for (const product of products) {
-            if (priceWatchList.has(product.goodsId)) {
-                const previousPrice = previousPrices.current[product.goodsId];
-                if (previousPrice && product.goodsPrice < previousPrice) {
+            if (priceWatchList.has(product.goodsUrl)) {
+                const previousPrice = previousPrices.current[product.goodsUrl];
+                // 输出id，前价格和当前价格
+                console.log("goodsUrl: " + product.goodsUrl + " previousPrice: " + previousPrice + " currentPrice: " + product.goodsPriceNum);
+                if (previousPrice && product.goodsPriceNum < previousPrice) {
                     try {
                         const emailResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/getEmail`, {
                             withCredentials: true,
@@ -311,7 +221,7 @@ const MainPage: React.FC = () => {
                     }
                 }
                 // 更新之前的价格
-                previousPrices.current[product.goodsId] = product.goodsPrice;
+                previousPrices.current[product.goodsUrl] = product.goodsPriceNum;
             }
         }
     };
@@ -321,12 +231,12 @@ const MainPage: React.FC = () => {
         e.preventDefault();
         e.stopPropagation();
         const updatedWatchList = new Set(priceWatchList);
-        if (priceWatchList.has(product.goodsId)) {
-            updatedWatchList.delete(product.goodsId);
+        if (priceWatchList.has(product.goodsUrl)) {
+            updatedWatchList.delete(product.goodsUrl);
         } else {
-            updatedWatchList.add(product.goodsId);
+            updatedWatchList.add(product.goodsUrl);
             // 记录当前价格
-            previousPrices.current[product.goodsId] = product.goodsPrice;
+            previousPrices.current[product.goodsUrl] = product.goodsPriceNum;
         }
         setPriceWatchList(updatedWatchList);
     };
@@ -346,8 +256,12 @@ const MainPage: React.FC = () => {
                 withCredentials: true,
             });
             // 假设后端返回的数据格式为 [{ date: '2024-04-25', price: 999.99 }, ...]
-            setPriceHistory(response.data);
-            console.log('历史价格数据:', response.data);
+            const historyData: PriceHistory[] = response.data.map((item: any) => ({
+                date: item.date,
+                price: parsePrice(item.price), // 将价格字符串转换为数值
+            }));
+            setPriceHistory(historyData);
+            console.log('历史价格数据:', historyData);
         } catch (error: any) {
             console.error('获取历史价格失败:', error);
             Modal.error({
@@ -365,14 +279,26 @@ const MainPage: React.FC = () => {
         setPriceHistory([]);
     };
 
+    const handleBreakpoint = (broken: boolean) => {
+        console.log("宽度已经小于500px");
+        if (broken) {
+            setCollapsed(true);
+        } else {
+            setCollapsed(false);
+        }
+    };
+
     return (
         <div className={"mainpage-container"} style={{ overflow: 'auto'}}>
             {/*<div className={"mainpage_inner"}>*/}
-                <Layout style={{ minHeight: '100vh', flexDirection: 'column', overflow: 'auto', minWidth: "1280px" }}>
-                    <Header style={{ display: 'flex', alignItems: 'center' }}>
-                        <a href="https://react.dev" target="_blank">
-                            <img src={reactLogo} className="logo react" alt="React logo"/>
-                        </a>
+                <Layout style={{ minHeight: '100vh', flexDirection: 'column', overflow: 'auto', minWidth: "300px" }}>
+                    <Header style={{ width: "100%", display: 'flex', alignItems: 'center', justifyContent: "flex-start" }}>
+                        {/*<a href="https://react.dev" target="_blank">*/}
+                        {/*    <img src={reactLogo} className="logo react" alt="React logo" style={{marginRight: "auto"}}/>*/}
+                        {/*</a>*/}
+                        <ShoppingOutlined
+                            style={{ fontSize: '24px', color: 'white', marginRight: '16px', cursor: 'pointer' }}
+                        />
                         <Menu
                             theme="dark"
                             mode="horizontal"
@@ -380,7 +306,7 @@ const MainPage: React.FC = () => {
                             selectedKeys={[selectedMenu]}
                             onClick={handleMenuClick}
                             items={items1}
-                            style={{ flex: 1, minWidth: 0 }}
+                            style={{ flex: 1, minWidth: 20 }}
                         />
                         <PoweroffOutlined
                             onClick={handleLogout}
@@ -389,7 +315,15 @@ const MainPage: React.FC = () => {
                     </Header>
                     {selectedMenu == '搜索' && (
                         <Layout>
-                            <Sider width={200} style={{ background: colorBgContainer }}>
+                            <Sider
+                                breakpoint="lg"
+                                collapsible={true}
+                                collapsedWidth="50px"
+                                collapsed={collapsed}
+                                onBreakpoint={handleBreakpoint}
+                                // collapsed={this.state.collapsed}
+                                trigger={null}
+                                style = {{ minWidth: "50px", background: colorBgContainer }}>
                                 <Menu
                                     mode="inline"
                                     defaultSelectedKeys={['pdd']}
@@ -398,7 +332,7 @@ const MainPage: React.FC = () => {
                                     onClick={handleSiteChange}
                                 />
                             </Sider>
-                            <Layout style={{ padding: '0 24px 24px' }}>
+                            <Layout style={{ flex: 1, maxWidth: "100%", minWidth: "250px", padding: '0 24px 24px' }}>
                                 <Search
                                     placeholder="输入搜索内容"
                                     enterButton="搜索"
@@ -409,7 +343,6 @@ const MainPage: React.FC = () => {
                                 />
                                 <Content
                                     style={{
-                                        padding: 24,
                                         margin: 0,
                                         minHeight: 280,
                                         background: colorBgContainer,
@@ -422,15 +355,13 @@ const MainPage: React.FC = () => {
                                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.09)',
                                         padding: '16px',
                                         boxSizing: 'border-box',
-                                        background: 'white',
-                                        borderRadius: '8px',
                                         overflow: 'auto',
                                     }}
                                 >
                                     <Row gutter={[16, 16]} style={{flex: 1, width: '100%', margin: 0}}>
                                         {currentProducts.map((product, index) => (
                                             <Col key={index} xs={24} sm={12} md={6} lg={6} xl={4}>
-                                                <a href={product.goodsUrl} referrer="no-referrer|origin|unsafe-url" target="_blank" rel="noopener noreferrer"
+                                                <a href={product.goodsUrl} referrerPolicy="no-referrer" target="_blank" rel="noopener noreferrer"
                                                    style={{textDecoration: 'none'}}>
                                                     <Card
                                                         hoverable
@@ -494,8 +425,6 @@ const MainPage: React.FC = () => {
                                         border: '1px solid #f0f0f0',
                                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.09)',
                                         boxSizing: 'border-box',
-                                        background: 'white',
-                                        borderRadius: '8px',
                                         overflow: 'auto',
                                     }}
                                 >
@@ -531,16 +460,13 @@ const MainPage: React.FC = () => {
                                                         }}>
                                                             <LineChartOutlined
                                                                 style={{
-                                                                    // position: 'absolute',
-                                                                    // bottom: '8px',
-                                                                    // right: '8px',
                                                                     fontSize: '20px',
                                                                     color: '#1890ff',
                                                                     cursor: 'pointer'
                                                                 }}
                                                                 onClick={(e) => handleHistoryClick(e, product)}
                                                             />
-                                                            {priceWatchList.has(product.goodsId) ? (
+                                                            {priceWatchList.has(product.goodsUrl) ? (
                                                                 <CloseOutlined
                                                                     style={{
                                                                         fontSize: '20px',
@@ -615,23 +541,6 @@ const MainPage: React.FC = () => {
                         </div>
                     )}
                 </Modal>
-            {/*</div>*/}
-            {/*/!* 登录二维码 Modal *!/*/}
-            {/*<Modal*/}
-            {/*    title="请使用手机微信扫码登录"*/}
-            {/*    open={isModalVisible}*/}
-            {/*    footer={null} // 移除底部按钮*/}
-            {/*    closable={false} // 禁止用户手动关闭 Modal*/}
-            {/*    centered*/}
-            {/*>*/}
-            {/*    <div style={{ textAlign: 'center' }}>*/}
-            {/*        {qrCode ? (*/}
-            {/*            <img src={qrCode} alt="二维码" style={{ width: '200px', height: '200px' }} />*/}
-            {/*        ) : (*/}
-            {/*            <Spin tip="二维码加载中..." />*/}
-            {/*        )}*/}
-            {/*    </div>*/}
-            {/*</Modal>*/}
         </div>
     );
 };

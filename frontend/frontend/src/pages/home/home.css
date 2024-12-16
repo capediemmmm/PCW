@@ -52,11 +52,9 @@
     margin: 0;
     display: block;
     place-items: center;
-    padding: 2em;
     padding: 0;
-    overflow: 'hidden';
+    overflow: auto;
     max-width: 320px;
-    margin: auto;
 }
 
 .index-footer {
@@ -101,4 +99,27 @@
     font-family: fantasy;
     font-size: 2em;
     color: #000;
+}
+
+@media only screen and (max-width: 1000px) {
+    .home-container {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .index-footer {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        margin-top: auto;
+        margin-bottom: 20px;
+    }
+
+    .login-register {
+        margin-top: 20px;
+        margin-bottom: 0;
+    }
 }

@@ -17,7 +17,7 @@ public class UserService {
     public ServiceBt validate(String username, String password) {
         User user = userMapper.getUserByUsername(username);
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return new ServiceBt(true);
+            return new ServiceBt(true, user.getUid());
         } else if (user == null) {
             return new ServiceBt(false, "Wrong username");
         } else {
