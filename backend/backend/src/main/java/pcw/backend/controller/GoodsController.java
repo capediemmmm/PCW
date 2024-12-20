@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/goods")
 // http://10.192.48.150:5173/ and http://localhost:5173
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://10.192.48.150:5173/"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5173", "http://10.112.107.57:5173/"}, allowCredentials = "true")
 public class GoodsController {
 
     private final GoodsInfoService GoodsInfoService;
@@ -249,17 +249,6 @@ public class GoodsController {
                         WebElement mmTitleElement = item.findElement(By.cssSelector("h5.feed-block-title > a.feed-nowrap"));
                         String mmGoodsName = mmTitleElement.getText();
                         product.setGoodsName(mmGoodsName);
-
-                        // 提取规格（如果有）
-//                        String mmGoodsSpec = "";
-//                        try {
-//                            // 假设规格在某个span内，需根据实际情况调整
-//                            WebElement mmSpecElement = item.findElement(By.cssSelector("div.cost span"));
-//                            mmGoodsSpec = mmSpecElement.getText();
-//                        } catch (NoSuchElementException e) {
-//                            mmGoodsSpec = "暂无规格";
-//                        }
-//                        product.setGoodsSpec(mmGoodsSpec);
                         product.setGoodsSpec("暂无规格");
 
                         // 提取价格

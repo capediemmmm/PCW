@@ -1,8 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
 import "./mainpage.css";
-import { ShoppingOutlined, PoweroffOutlined, LineChartOutlined, ClockCircleOutlined, CloseOutlined  } from '@ant-design/icons';
+import { UserOutlined, SettingOutlined, ShoppingOutlined, PoweroffOutlined, LineChartOutlined, ClockCircleOutlined, CloseOutlined  } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Layout, Menu, theme, Input, Modal, Card, Row, Col, Pagination, Spin } from 'antd';
+import {Layout, Menu, theme, Input, Modal, Card, Row, Col, Pagination, Spin, Dropdown} from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import jdLogo from '../../assets/jingdong.svg';
@@ -129,6 +129,27 @@ const MainPage: React.FC = () => {
             }
         }
     }, [searchKeyword, selectedSite, selectedMenu]);
+
+    useEffect(() => {
+        const validateUser = async () => {
+            try {
+                await axios.get(`${import.meta.env.VITE_API_URL}/api/user/info`, {
+                    withCredentials: true,
+                });
+                // 用户已登录，继续渲染页面
+            } catch (error) {
+                console.error('用户未登录:', error);
+                Modal.error({
+                    title: '未登录',
+                    content: '请先登录。',
+                    onOk() {
+                        navigate('/');
+                    },
+                });
+            }
+        };
+        validateUser();
+    }, []);
 
     const fetchDatabaseProducts = async (keyword: string) => {
         setLoading(true);
@@ -280,7 +301,7 @@ const MainPage: React.FC = () => {
     };
 
     const handleBreakpoint = (broken: boolean) => {
-        console.log("宽度已经小于500px");
+        // console.log("宽度已经小于500px");
         if (broken) {
             setCollapsed(true);
         } else {
@@ -288,14 +309,28 @@ const MainPage: React.FC = () => {
         }
     };
 
+    const handleSettings = () => {
+        navigate('/settings'); // 新增的设置导航逻辑
+    };
+
+    const userMenuItems: MenuProps['items'] = [
+        {
+            key: 'settings',
+            label: '设置',
+            icon: <SettingOutlined />,
+        },
+        {
+            key: 'logout',
+            label: '退出登录',
+            icon: <PoweroffOutlined />,
+        },
+    ];
+
     return (
         <div className={"mainpage-container"} style={{ overflow: 'auto'}}>
             {/*<div className={"mainpage_inner"}>*/}
                 <Layout style={{ minHeight: '100vh', flexDirection: 'column', overflow: 'auto', minWidth: "300px" }}>
                     <Header style={{ width: "100%", display: 'flex', alignItems: 'center', justifyContent: "flex-start" }}>
-                        {/*<a href="https://react.dev" target="_blank">*/}
-                        {/*    <img src={reactLogo} className="logo react" alt="React logo" style={{marginRight: "auto"}}/>*/}
-                        {/*</a>*/}
                         <ShoppingOutlined
                             style={{ fontSize: '24px', color: 'white', marginRight: '16px', cursor: 'pointer' }}
                         />
@@ -308,10 +343,23 @@ const MainPage: React.FC = () => {
                             items={items1}
                             style={{ flex: 1, minWidth: 20 }}
                         />
-                        <PoweroffOutlined
-                            onClick={handleLogout}
-                            style={{ fontSize: '24px', color: 'white', marginLeft: 'auto', cursor: 'pointer' }}
-                        />
+                        <Dropdown
+                            menu={{
+                                items: userMenuItems,
+                                onClick: ({ key }) => {
+                                    if (key === 'settings') {
+                                        handleSettings();
+                                    } else if (key === 'logout') {
+                                        handleLogout();
+                                    }
+                                },
+                            }}
+                            placement="bottomRight"
+                        >
+                            <UserOutlined
+                                style={{ fontSize: '24px', color: 'white', marginLeft: 'auto', cursor: 'pointer' }}
+                            />
+                        </Dropdown>
                     </Header>
                     {selectedMenu == '搜索' && (
                         <Layout>

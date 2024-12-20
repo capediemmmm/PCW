@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/user")
-@CrossOrigin(origins = {"http://localhost:5173", "http://10.192.48.150:5173/"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5173", "http://10.112.107.57:5173/"}, allowCredentials = "true")
 public class UserController {
     @Data
     public static class LoginRequest {

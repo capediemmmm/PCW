@@ -17,8 +17,6 @@ services:
         condition: service_started
       db:
         condition: service_healthy
-#      otel-collector:
-#        condition: service_healthy
     shm_size: 2g
 
   db:
@@ -43,24 +41,6 @@ services:
     ports:
       - "4444:4444"
     shm_size: 2g
-#    environment:
-#      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-#
-#  otel-collector:
-#    image: otel/opentelemetry-collector:latest
-#    ports:
-#      - "4317:4317"
-#      - "4318:4318"  # 添加 HTTP OTLP 端口
-#      - "8888:8888"  # 添加 Metrics 端口
-#    volumes:
-#      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
-#    command: ["--config=/etc/otelcol/config.yaml"]
-#    healthcheck:
-##      test: [ "CMD-SHELL", "curl -f http://localhost:4317 || exit 1" ]
-#      test: [ "CMD-SHELL", "curl -f http://localhost:8888/metrics || exit 1" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
 
 volumes:
   db-data:

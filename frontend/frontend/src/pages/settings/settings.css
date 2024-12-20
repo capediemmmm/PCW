@@ -1,0 +1,16 @@
+.settings-container {
+    height: 100%;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    background-color: #f5f5f5;
+}
+
+.settings_inner {
+    min-width: 1280px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    margin: 0 auto;
+    overflow: auto;
+}
