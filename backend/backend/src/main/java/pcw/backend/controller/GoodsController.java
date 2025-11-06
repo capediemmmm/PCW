@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/goods")
 // http://10.192.48.150:5173/ and http://localhost:5173
 
-@CrossOrigin(origins = {"http://localhost:5173", "http://10.112.107.57:5173/"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5173", "http://10.192.92.72:5173/"}, allowCredentials = "true")
 public class GoodsController {
 
     private final GoodsInfoService GoodsInfoService;
@@ -168,14 +168,14 @@ public class GoodsController {
 
             allProducts = indexPage(driver, wait, searchUrl, 1, maxPage, allProducts, site);
 
-            // 将url为https://www.smzdm.com/p/135650958/的商品（如果被查到了）的价格（类型是"3499元"这样的）转换为数字，然后修改为原值的0.9倍再转换为字符串（记得带上元）存入数据库
+            // 将url为https://www.smzdm.com/p/136316572/的商品（如果被查到了）的价格（类型是"3499元"这样的）转换为数字，然后修改为原值的0.9倍再转换为字符串（记得带上元）存入数据库
             for (GoodsInfo product : allProducts) {
-                if (product.getGoodsUrl().equals("https://www.smzdm.com/p/135650958/")) {
+                if (product.getGoodsUrl().equals("https://www.smzdm.com/p/136316572/")) {
                     System.out.println("将要降价: " + product);
                     String priceStr = product.getGoodsPrice();
                     String price = parsePrice(priceStr);
                     double priceDouble = Double.parseDouble(price);
-                    priceDouble *= 0.55;
+                    priceDouble *= 0.30;
                     String newPrice = String.format("%.2f", priceDouble) + "元";
                     product.setGoodsPrice(newPrice);
                 }

@@ -165,6 +165,75 @@
   image("./assets/test/empty-register.png", width: 25%)
 )
 
+=== 用户信息设置界面测试
+
+==== 修改用户名或邮箱
+
+测试用例1：修改用户名。输入用户名 bbbbbb，可以看到系统弹出成功提示，提示用户名修改成功，且上方的用户名已经更新。
+
+#figure(
+  image("./assets/test/change_username.png", width: 70%)
+)
+
+#figure(
+  image("./assets/test/change_username_2.png", width: 70%)
+)
+
+测试用例2：修改邮箱。输入邮箱 aaa\@aaa.com，可以看到系统弹出成功提示，提示邮箱修改成功，且上方的邮箱已经更新。
+
+#figure(
+  image("./assets/test/change_email.png", width: 70%)
+)
+
+#figure(
+  image("./assets/test/change_email_2.png", width: 70%)
+)
+
+测试用例3：重复的用户名或邮箱。输入用户名 cyx123，可以看到系统弹出错误提示，提示用户名已经存在。输入邮箱 cyx\@111.com，可以看到系统弹出错误提示，提示邮箱已经存在。
+
+#figure(
+  image("./assets/test/change_exists.png", width: 70%)
+)
+
+测试用例4：用户名长度不够。输入用户名 cyx，可以看到系统弹出错误提示，提示用户名长度不够。
+
+#figure(
+  image("./assets/test/change_username_short.png", width: 70%)
+)
+
+==== 修改密码
+
+测试用例1：修改密码。输入原密码 123456，新密码 1234567，确认密码 1234567，可以看到系统弹出成功提示，提示密码修改成功。
+
+#figure(
+  image("assets/test/change_pwd_succ.png", width: 70%)
+)
+
+测试用例2：原密码错误。输入原密码 123456，新密码 123456，确认密码 123456，可以看到系统弹出错误提示，提示密码错误。
+
+#figure(
+  image("assets/test/wrong_pwd.png", width: 70%)
+)
+
+测试用例3：新密码和确认密码不一致。输入原密码 1234567，新密码 123456，确认密码 1234567，可以看到系统弹出错误提示，提示两次输入的密码不一致。
+
+#figure(
+  image("assets/test/change-pwd-diff.png", width: 50%)
+)
+
+测试用例4：新密码长度不够。输入原密码 1234567，新密码 12345，确认密码 12345，可以看到系统弹出错误提示，提示密码长度不够。
+
+#figure(
+  image("assets/test/change_pwd_short.png", width: 50%)
+)
+
+测试用例5：空表单。点击修改密码按钮，可以看到系统弹出错误提示，提示原密码、新密码、确认密码不能为空。
+
+#figure(
+  image("assets/test/change_pwd_empty.png", width: 50%)
+)
+
+
 === 商品搜索测试
 
 ==== 搜索
@@ -281,9 +350,17 @@
 
 可以看到，商品数据库界面在移动端浏览器上正常显示。
 
+=== 用户信息设置界面
+
+#figure(
+  image("./assets/test/mobile_setting.jpg", width: 40%)
+)
+
+可以看到，用户信息设置界面在移动端上正常显示。
+
 = 测试结论
 
-本次测试覆盖了系统的所有功能，包括用户登录、用户注册、商品搜索、商品数据库查询、显示历史价格表、降价邮件提醒等等。测试结果显示，系统的所有功能均正常运行，符合设计和用户需求。系统的安全性也得到了验证，包括但不限于防止SQL注入、密码加密等。系统的兼容性也得到了验证，可以在不同的浏览器和操作系统上正常运行。
+本次测试覆盖了系统的所有功能，包括用户登录、用户注册、用户信息设置、商品搜索、商品数据库查询、显示历史价格表、降价邮件提醒等等。测试结果显示，系统的所有功能均正常运行，符合设计和用户需求。系统的安全性也得到了验证，包括但不限于防止SQL注入、密码加密等。系统的兼容性也得到了验证，可以在不同的浏览器和操作系统上正常运行。
 
 = 后续建议
 

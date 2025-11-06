@@ -20,7 +20,6 @@ if (isDev) {
             <App />
         </HashRouter>
     )
-
 }
 
 // createRoot(document.getElementById('root')!).render(
