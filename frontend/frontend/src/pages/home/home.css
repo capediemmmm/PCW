@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton+SC:wght@300&display=swap');
+
+.home-container {
+    background-image: url('../../assets/background_new.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-register {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.login-register .logo {
+    height: 6em;
+    padding: 1.5em;
+    will-change: filter;
+    transition: filter 300ms;
+}
+.logo:hover {
+    filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+    filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    a .logo {
+        animation: logo-spin infinite 20s linear;
+    }
+}
+
+.login-card {
+    margin: 0;
+    display: block;
+    place-items: center;
+    padding: 0;
+    overflow: auto;
+    max-width: 320px;
+}
+
+.index-footer {
+    color: #888;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 300px;
+    transform: translateX(-50%);
+}
+
+#normal_login .login-form {
+    max-width: 300px;
+}
+
+#normal_login .login-form-item {
+    justify-content: space-between;
+    align-items: center;
+    display: inline-block;
+}
+
+#normal_login .login-form-forgot {
+    float: right;
+    display: inline-block;
+}
+
+#normal_login .ant-checkbox-wrapper {
+    float: left;
+}
+
+#normal_login .login-form-button {
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+#normal_register .register-form-button {
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+.head1 {
+    font-family: fantasy;
+    font-size: 2em;
+    color: #000;
+}
+
+@media only screen and (max-width: 1000px) {
+    .home-container {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .index-footer {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        margin-top: auto;
+        margin-bottom: 20px;
+    }
+
+    .login-register {
+        margin-top: 20px;
+        margin-bottom: 0;
+    }
+}

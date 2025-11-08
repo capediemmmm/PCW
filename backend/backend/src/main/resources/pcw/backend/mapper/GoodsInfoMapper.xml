@@ -1,0 +1,104 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pcw.backend.mapper.GoodsInfoMapper">
+
+    <select id="getGoodsInfoByGoodsId" resultType="pcw.backend.entity.GoodsInfo">
+        SELECT *
+        FROM goods_info
+        WHERE goods_id = #{goodsId}
+    </select>
+
+    <!-- 根据goodsName和goodsUrl查找GoodsInfo -->
+    <select id="getGoodsInfoByNameAndUrl" resultType="pcw.backend.entity.GoodsInfo">
+        SELECT * FROM goods_info
+        WHERE goods_name = #{goodsName} AND goods_url = #{goodsUrl}
+            LIMIT 1
+    </select>
+
+    <!-- 根据goodsId获取GoodsHistoryPrice -->
+    <select id="getGoodsHistoryPriceByGoodId" resultType="pcw.backend.entity.GoodsHistoryPrice">
+        SELECT * FROM goods_history_price
+        WHERE good_id = #{goodId}
+    </select>
+
+    <!-- 插入GoodsHistoryPrice -->
+    <insert id="insertGoodsHistoryPrice" parameterType="pcw.backend.entity.GoodsHistoryPrice">
+        INSERT INTO goods_history_price (good_id, price_history)
+        VALUES (#{goodId}, #{priceHistory})
+    </insert>
+
+    <!-- 更新GoodsHistoryPrice -->
+    <update id="updateGoodsHistoryPrice" parameterType="pcw.backend.entity.GoodsHistoryPrice">
+        UPDATE goods_history_price
+        SET price_history = #{priceHistory}
+        WHERE good_id = #{goodId}
+    </update>
+
+    <select id="selectAllGoods" resultType="pcw.backend.entity.GoodsInfo">
+        SELECT * FROM goods_info
+    </select>
+
+    <select id="getGoodsInfoByGoodsName" parameterType="String" resultType="pcw.backend.entity.GoodsInfo">
+        SELECT *
+        FROM goods_info
+        WHERE goods_name LIKE CONCAT('%', #{goodsName}, '%')
+    </select>
+
+<!--    <insert id="insertGoodsInfo" parameterType="pcw.backend.entity.GoodsInfo" useGeneratedKeys="true" keyProperty="goodsId">-->
+<!--        INSERT INTO goods_info (-->
+<!--            goods_name, goods_tsc, bar_code, goods_desc, one_category_id,-->
+<!--            two_category_id, three_category_id, goods_img, goods_price,-->
+<!--            goods_stock, weight, length, height, width, modified_time-->
+<!--        )-->
+<!--        VALUES (-->
+<!--           #{goodsName}, #{goodsTsc}, #{barCode}, #{goodsDesc}, #{oneCategoryId},-->
+<!--           #{twoCategoryId}, #{threeCategoryId}, #{goodsImg}, #{goodsPrice},-->
+<!--           #{goodsStock}, #{weight}, #{length}, #{height}, #{width}, #{modifiedTime}-->
+<!--       )-->
+<!--    </insert>-->
+    <insert id="insertGoodsInfo" parameterType="pcw.backend.entity.GoodsInfo" useGeneratedKeys="true" keyProperty="goodsId">
+        INSERT INTO goods_info (
+            goods_name, goods_spec, goods_price, goods_img_url, goods_url
+        )
+        VALUES (
+                   #{goodsName}, #{goodsSpec}, #{goodsPrice}, #{goodsImgUrl}, #{goodsUrl}
+               )
+    </insert>
+
+
+<!--    <update id="updateGoodsInfo" parameterType="pcw.backend.entity.GoodsInfo">-->
+<!--        UPDATE goods_info-->
+<!--        SET goods_name = #{goodsName},-->
+<!--            goods_tsc = #{goodsTsc},-->
+<!--            bar_code = #{barCode},-->
+<!--            goods_desc = #{goodsDesc},-->
+<!--            one_category_id = #{oneCategoryId},-->
+<!--            two_category_id = #{twoCategoryId},-->
+<!--            three_category_id = #{threeCategoryId},-->
+<!--            goods_img = #{goodsImg},-->
+<!--            goods_price = #{goodsPrice},-->
+<!--            goods_stock = #{goodsStock},-->
+<!--            weight = #{weight},-->
+<!--            length = #{length},-->
+<!--            height = #{height},-->
+<!--            width = #{width},-->
+<!--            modified_time = #{modifiedTime}-->
+<!--        WHERE goods_id = #{goodsId}-->
+<!--    </update>-->
+    <update id="updateGoodsInfo" parameterType="pcw.backend.entity.GoodsInfo">
+        UPDATE goods_info
+        SET
+            goods_name = #{goodsName},
+            goods_spec = #{goodsSpec},
+            goods_price = #{goodsPrice},
+            goods_img_url = #{goodsImgUrl},
+            goods_url = #{goodsUrl}
+        WHERE goods_id = #{goodsId}
+    </update>
+
+    <delete id="deleteGoodsInfoByGoodsId" parameterType="Integer">
+        DELETE
+        FROM goods_info
+        WHERE goods_id = #{goodsId}
+    </delete>
+
+</mapper>
